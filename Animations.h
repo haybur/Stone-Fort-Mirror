@@ -1,8 +1,11 @@
 //// Animations.h
 
 void addSparkles(int sparkStart, int sparkEnd, uint8_t freq, double multiplierAdjustment, int additionAdjustment, int hue, bool white) {
+	// If sparkles are being added to react to music, do this:
 
+	// If the freq argument is a valid FFT bin, 0 - 15
 	if (freq > 0 && freq < 15) {
+		// Apply addition adjustment. This changes who 
 		sparkleNumber = spectrumValue[freq] + additionAdjustment;
 		sparkleNumber = constrain(sparkleNumber, 0, 500);
 		sparkleNumber = map(sparkleNumber, 0, 500, 0, max_num_of_sparkles);
@@ -15,6 +18,7 @@ void addSparkles(int sparkStart, int sparkEnd, uint8_t freq, double multiplierAd
 			fadeValue = fadeValue + sparkleNumber*.1;
 		}
 	}
+	// Else, if sparkles are being added as an ambient effect, do this:
 	else {
 		EVERY_N_MILLISECONDS(additionAdjustment) {
 			int pos = getRandomPixel(sparkStart, sparkEnd);

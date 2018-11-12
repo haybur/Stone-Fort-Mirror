@@ -1,8 +1,5 @@
-/*
-Name:    Teensy_Squares.ino
-Created: 10/4/2016 1:24:27 PM
-Author:  dehab
-*/
+// This code works on the Stone Fort design with 343 LEDs
+
 //#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 #include <Arduino.h>
@@ -244,7 +241,7 @@ void setup() {
 	mixer1.gain(0, 0.5);
 	mixer1.gain(1, 0.5);
 
-	Serial.begin(9600);
+	Serial.begin(115200);
 	LEDS.addLeds<OCTOWS2811>(leds, NUM_LEDS);
 	for (int i = 0; i < NUM_LEDS; i++) leds[i] = 0;
 
@@ -520,6 +517,7 @@ void loop() {
 
 	fillStats();
 	beatDetection(autoSwitch);
+	//beatMeter();
 
 	// Button for autoswitching toggle
 	if (button1.released()) {
@@ -1660,21 +1658,33 @@ void ambient_rainbow() {
 }
 
 void beatMeter() {
+	if (initiate) {
+		changingHue = false;
+	}
+	// In both directions, the equation of the line is y = x, so the slope = 1
 	slope = 1;
 
+	// If there is a low beat
 	if (beatDetected[2] == 2) {
+		// Place the line on the lowest LED by making it y = x - 52
 		yintLow = -52;
+		// The rate at which the line moves faster for every beat, 
 		lowSpeed -= .85*lowSpeed;
+		// Light up the entire bottom section
 		for (int i = 0; i < cor14; i++) leds[i] = CHSV(colorOne, 255, 180);
 	}
+	// If there is a high beat
 	if (beatDetected[12] == 2) {
 		yintHigh = 52;
 		highSpeed -= .85*highSpeed;
 		for (int i = cor14; i < cor28; i++) leds[i] = CHSV(colorTwo, 255, 180);
 	}
 
+	// If the time passed is greater than the length of time, highSpeed, being used for the high beats
 	if (time > highSpeed) {
+		// And the y-intercept for the high beats, yintHigh, is still decreasing, decrement the y-int 1
 		if (yintHigh > 6) yintHigh--;
+		// Reset the clock for how long to wait until the y-int is moved nxt
 		time = 0;
 	}
 	if (time1 > lowSpeed) {
@@ -1691,21 +1701,21 @@ void beatMeter() {
 		if (slope * ledx[i] + yintHigh - ledy[i] < 1 && slope *ledx[i] + yintHigh - ledy[i] > -1) leds[i] = CRGB::Black;
 	}
 
-	if (yintLow > -7 || !leds[cor0 + 7]) {
-		addSparkles(cor0 + 7, cor14, 2, .2, -50, colorOne, false);
-		//for (int i = 0; i < spectrumValue[2] - 10; i++) {  // For as loud as the low frequency is, add that many sparkles to bottom left			
-			//int pos = random16(cor0 + 7, cor14);
-			//brightness = map(spectrumValue[2], 0, 14, 0, 255);
-		//	leds[pos] = CHSV(colorOne, random8(200, 255), random(30, 130));
-		//}
+	if (yintLow > -7) {
+		//addSparkles(cor0 + 7, cor14, 2, .2, -50, colorOne, false);
+		for (int i = 0; i < spectrumValue[2] - 20; i++) {  // For as loud as the low frequency is, add that many sparkles to bottom left			
+			int pos = random16(cor0 + 7, cor14);
+			brightness = map(spectrumValue[2], 0, 14, 0, 255);
+			leds[pos] = CHSV(colorOne, random8(200, 255), random(30, 130));
+		}
 	}
-	if (yintHigh < 7 || !leds[cor28 - 7]) {
-		addSparkles(cor14, cor28 - 7, 12, .2, -50, colorTwo, false);
-		//for (int i = 0; i < spectrumValue[12] - 10; i++) {  // For as loud as the high frequency is, add that many sparkles to top right
-		//	int pos = random16(cor14, cor28 - 7);
-		//	//brightness = map(spectrumValue[12], 0, 14, 0, 255);
-		//	leds[pos] = CHSV(colorTwo, random8(200, 255), random8(30, 130));
-		//}
+	if (yintHigh < 7) {
+		//addSparkles(cor14, cor28 - 7, 12, .2, -50, colorTwo, false);
+		for (int i = 0; i < spectrumValue[12] - 20; i++) {  // For as loud as the high frequency is, add that many sparkles to top right
+			int pos = random16(cor14, cor28 - 7);
+			brightness = map(spectrumValue[12], 0, 14, 0, 255);
+			leds[pos] = CHSV(colorTwo, random8(200, 255), random8(30, 130));
+		}
 	}
 
 	for (int i = 0; i < 6; i++) {   // Creates white corners on top right and bottom left
